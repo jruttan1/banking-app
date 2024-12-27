@@ -2,11 +2,6 @@ import React from 'react'
 import AnimatedCounter from './AnimatedCounter';
 import DoughnutChart from './DoughnutChart';
 
-interface TotalBalanceBoxProps {
-  accounts: any[];
-  totalBanks: number;
-  totalCurrentBalance: number;
-}
 
 const TotalBalanceBox = ({
     accounts = [], totalBanks, totalCurrentBalance
