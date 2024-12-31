@@ -1,6 +1,6 @@
 "use client";
 import HeaderBox from '@/components/HeaderBox'
-import TotalBalanceBox from '@/components/TotalBalanceBox';
+import TotalBalanceBox from '@/components/TotalBalance';
 import React from 'react'
 import RightSidebar from '@/components/RightSidebar';
 
