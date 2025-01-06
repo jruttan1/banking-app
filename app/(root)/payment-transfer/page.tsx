@@ -3,7 +3,7 @@ import React from 'react'
 const Transfer = () => {
   return (
     <div>
-      Transfer Payment 1
+      Transfer Payment
     </div>
   )
 }
