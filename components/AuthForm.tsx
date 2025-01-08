@@ -33,13 +33,21 @@ const AuthForm = ({ type }: { type: string }) => {
   const formSchema = authFormSchema(type);
 
   // 1. Define your form.
-    const form = useForm<z.infer<typeof formSchema>>({
-      resolver: zodResolver(formSchema),
-      defaultValues: {
-        email:"",
-        password:"",
-      },
-    })
+  const form = useForm<z.infer<typeof formSchema>>({
+     resolver: zodResolver(formSchema),
+     defaultValues: {
+       email: "",
+     password: "",
+     firstName: type === 'sign-up' ? "" : undefined,
+     lastName: type === 'sign-up' ? "" : undefined,
+     address1: type === 'sign-up' ? "" : undefined,
+     city: type === 'sign-up' ? "" : undefined,
+     province: type === 'sign-up' ? "" : undefined,
+     postalCode: type === 'sign-up' ? "" : undefined,
+     dateOfBirth: type === 'sign-up' ? "" : undefined,
+    SIN: type === 'sign-up' ? "" : undefined,
+     },
+   })
    
     // 2. Define a submit handler.
     const onSubmit = async (data: z.infer<typeof formSchema>) => {
@@ -51,12 +59,12 @@ const AuthForm = ({ type }: { type: string }) => {
           const userData = {
             firstName: data.firstName!,
             lastName: data.lastName!,
-            address1: data.address!,
+            address1: data.address1!,
             city: data.city!,
-            state: data.province!,
+            province: data.province!,
             postalCode: data.postalCode!,
             dateOfBirth: data.dateOfBirth!,
-            ssn: data.sin!,
+            ssn: data.SIN!,
             email: data.email,
             password: data.password
           }
@@ -64,16 +72,17 @@ const AuthForm = ({ type }: { type: string }) => {
           const newUser = await signUp(userData);
 
           setUser(newUser);
-
+          
         }
 
-        if (type === 'sign-in') {
-          const response = await signIn({ 
-            email: data.email, 
-            password: data.password 
-          })
+      if (type === 'sign-in') {
+        const response = await signIn({ 
+          email: data.email, 
+          password: data.password          
+        })
     
-          if (response) router.push('/')}
+        if (response) router.push('/')
+      }
 
       } catch (error) {
         console.error(error);
@@ -128,7 +137,7 @@ const AuthForm = ({ type }: { type: string }) => {
                       <CustomInput control={form.control} name='firstName' label="First Name" placeholder='Enter your first name' />
                       <CustomInput control={form.control} name='lastName' label="Last Name" placeholder='Enter your first name' />
                     </div>
-                    <CustomInput control={form.control} name='address' label="Address" placeholder='Enter your address' />
+                    <CustomInput control={form.control} name='address1' label="Address" placeholder='Enter your address' />
                     <CustomInput control={form.control} name='city' label="City" placeholder='Enter your city' />
                     <div className="flex gap-4">
                       <CustomInput control={form.control} name='province' label="Province" placeholder='Example: Ontario' />
@@ -136,7 +145,7 @@ const AuthForm = ({ type }: { type: string }) => {
                     </div>
                     <div className="flex gap-4">
                       <CustomInput control={form.control} name='dateOfBirth' label="Date of Birth" placeholder='YYYY-MM-DD' />
-                      <CustomInput control={form.control} name='sin' label="SIN" placeholder='Example: 123456789' />
+                      <CustomInput control={form.control} name='SIN' label="SIN" placeholder='Example: 123456789' />
                     </div>
                   </>
                 )}
