@@ -12,10 +12,10 @@ declare type SignUpParams = {
   lastName: string;
   address1: string;
   city: string;
-  province: string;
+  state: string;
   postalCode: string;
   dateOfBirth: string;
-  sin: string;
+  ssn: string;
   email: string;
   password: string;
 };
@@ -39,7 +39,7 @@ declare type User = {
   state: string;
   postalCode: string;
   dateOfBirth: string;
-  sin: string;
+  ssn: string;
 };
 
 declare type NewUserParams = {
@@ -60,7 +60,7 @@ declare type Account = {
   type: string;
   subtype: string;
   appwriteItemId: string;
-  sharableId: string;
+  shareableId: string;
 };
 
 declare type Transaction = {
@@ -89,7 +89,7 @@ declare type Bank = {
   accessToken: string;
   fundingSourceUrl: string;
   userId: string;
-  sharableId: string;
+  shareableId: string;
 };
 
 declare type AccountTypes =
@@ -131,10 +131,10 @@ declare type NewDwollaCustomerParams = {
   type: string;
   address1: string;
   city: string;
-  province: string;
+  state: string;
   postalCode: string;
   dateOfBirth: string;
-  sin: string;
+  ssn: string;
 };
 
 declare interface CreditCardProps {
@@ -211,7 +211,7 @@ declare interface TotalBalanceBoxProps {
 
 declare interface FooterProps {
   user: User;
-  type?: "desktop" | "mobile";
+  type?: 'mobile' | 'desktop'
 }
 
 declare interface RightSidebarProps {
@@ -220,7 +220,7 @@ declare interface RightSidebarProps {
   banks: Bank[] & Account[];
 }
 
-declare interface SidebarProps {
+declare interface SiderbarProps {
   user: User;
 }
 
@@ -314,7 +314,7 @@ declare interface createBankAccountProps {
   accountId: string;
   bankId: string;
   fundingSourceUrl: string;
-  sharableId: string;
+  shareableId: string;
 }
 
 declare interface getBanksProps {
