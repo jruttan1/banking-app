@@ -52,32 +52,44 @@ export const signIn = async ({ email, password }: signInProps) => {
   }
 }
 
-export const signUp = async ({ password, ...userData }: SignUpParams) => {
+export const signUp = async ({ password, ...userData }: SignUpParams): Promise<User | null> => {
   const { email, firstName, lastName } = userData;
   
-  let newUserAccount;
-
   try {
+    // 1. Create Appwrite account
     const { account, database } = await createAdminClient();
-
-    newUserAccount = await account.create(
+    const newUserAccount = await account.create(
       ID.unique(), 
       email, 
-      password, 
+      password,
       `${firstName} ${lastName}`
     );
 
-    if(!newUserAccount) throw new Error('Error creating user')
+    if (!newUserAccount?.$id) {
+      throw new Error('Failed to create Appwrite account');
+    }
 
-    const dwollaCustomerUrl = await createDwollaCustomer({
-      ...userData,
-      type: 'personal'
-    })
+    // 2. Create Dwolla customer with strict typing
+    const dwollaResponse = await createDwollaCustomer({
+      firstName,
+      lastName,
+      email,
+      type: 'personal',
+      address1: userData.address1,
+      city: userData.city,
+      state: userData.state,
+      postalCode: userData.postalCode,
+      dateOfBirth: userData.dateOfBirth,
+      ssn: userData.ssn
+    });
 
-    if(!dwollaCustomerUrl) throw new Error('Error creating Dwolla customer')
+    if (!dwollaResponse) {
+      throw new Error('Dwolla customer creation failed');
+    }
 
-    const dwollaCustomerId = extractCustomerIdFromUrl(dwollaCustomerUrl);
+    const dwollaCustomerId = extractCustomerIdFromUrl(dwollaResponse);
 
+    // 3. Create user document
     const newUser = await database.createDocument(
       DATABASE_ID!,
       USER_COLLECTION_ID!,
@@ -86,24 +98,20 @@ export const signUp = async ({ password, ...userData }: SignUpParams) => {
         ...userData,
         userId: newUserAccount.$id,
         dwollaCustomerId,
-        dwollaCustomerUrl
+        dwollaCustomerUrl: dwollaResponse
       }
-    )
+    );
 
+    // 4. Create session
     const session = await account.createEmailPasswordSession(email, password);
-
-    cookies().set("appwrite-session", session.secret, {
-      path: "/",
-      httpOnly: true,
-      sameSite: "strict",
-      secure: true,
-    });
+    await cookies().set("appwrite-session", session.secret);
 
     return parseStringify(newUser);
-  } catch (error) {
-    console.error('Error', error);
+  } catch (error: any) {
+    console.error('[SignUp Error]:', error?.message || error);
+    return null;
   }
-}
+};
 
 export async function getLoggedInUser() {
   try {
