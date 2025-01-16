@@ -64,11 +64,7 @@ const AuthForm = ({ type }: { type: string }) => {
 
           const newUser = await signUp(userData);
 
-          if (newUser) {
-            setUser(newUser);
-            router.push('/');  // Add navigation
-            return;
-          }
+          setUser(newUser);
         }
 
         if(type === 'sign-in') {
@@ -80,7 +76,7 @@ const AuthForm = ({ type }: { type: string }) => {
           if(response) router.push('/')
         }
       } catch (error) {
-        console.error('Auth error:', error);
+        console.log(error);
       } finally {
         setIsLoading(false);
       }
@@ -148,12 +144,7 @@ const AuthForm = ({ type }: { type: string }) => {
               <CustomInput control={form.control} name='password' label="Password" placeholder='Enter your password' />
 
               <div className="flex flex-col gap-4">
-                <Button 
-                  type="submit" 
-                  disabled={isLoading} 
-                  className="form-btn"
-                  onClick={form.handleSubmit(onSubmit)}  // Add explicit onClick handler
-                >
+                <Button type="submit" disabled={isLoading} className="form-btn">
                   {isLoading ? (
                     <>
                       <Loader2 size={20} className="animate-spin" /> &nbsp;

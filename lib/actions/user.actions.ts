@@ -37,7 +37,7 @@ export const signIn = async ({ email, password }: signInProps) => {
     const { account } = await createAdminClient();
     const session = await account.createEmailPasswordSession(email, password);
 
-    cookies().set("appwrite-session", session.secret, {
+    (await cookies()).set("appwrite-session", session.secret, {
       path: "/",
       httpOnly: true,
       sameSite: "strict",
@@ -52,44 +52,30 @@ export const signIn = async ({ email, password }: signInProps) => {
   }
 }
 
-export const signUp = async ({ password, ...userData }: SignUpParams): Promise<User | null> => {
+export const signUp = async ({ password, ...userData }: SignUpParams) => {
   const { email, firstName, lastName } = userData;
   
   try {
-    // 1. Create Appwrite account
     const { account, database } = await createAdminClient();
+
     const newUserAccount = await account.create(
       ID.unique(), 
       email, 
-      password,
+      password, 
       `${firstName} ${lastName}`
     );
 
-    if (!newUserAccount?.$id) {
-      throw new Error('Failed to create Appwrite account');
-    }
+    if (!newUserAccount) throw new Error('Error creating user');
 
-    // 2. Create Dwolla customer with strict typing
-    const dwollaResponse = await createDwollaCustomer({
-      firstName,
-      lastName,
-      email,
-      type: 'personal',
-      address1: userData.address1,
-      city: userData.city,
-      state: userData.state,
-      postalCode: userData.postalCode,
-      dateOfBirth: userData.dateOfBirth,
-      ssn: userData.ssn
+    const dwollaCustomerUrl = await createDwollaCustomer({
+      ...userData,
+      type: 'personal'
     });
 
-    if (!dwollaResponse) {
-      throw new Error('Dwolla customer creation failed');
-    }
+    if (!dwollaCustomerUrl) throw new Error('Error creating Dwolla customer');
 
-    const dwollaCustomerId = extractCustomerIdFromUrl(dwollaResponse);
+    const dwollaCustomerId = extractCustomerIdFromUrl(dwollaCustomerUrl);
 
-    // 3. Create user document
     const newUser = await database.createDocument(
       DATABASE_ID!,
       USER_COLLECTION_ID!,
@@ -98,18 +84,23 @@ export const signUp = async ({ password, ...userData }: SignUpParams): Promise<U
         ...userData,
         userId: newUserAccount.$id,
         dwollaCustomerId,
-        dwollaCustomerUrl: dwollaResponse
+        dwollaCustomerUrl,
       }
     );
 
-    // 4. Create session
     const session = await account.createEmailPasswordSession(email, password);
-    await cookies().set("appwrite-session", session.secret);
+
+    await cookies().set("appwrite-session", session.secret, {
+      path: "/",
+      httpOnly: true,
+      sameSite: "strict",
+      secure: true,
+    });
 
     return parseStringify(newUser);
-  } catch (error: any) {
-    console.error('[SignUp Error]:', error?.message || error);
-    return null;
+  } catch (error) {
+    console.error('Error', error);
+    throw error;
   }
 };
 
@@ -118,11 +109,15 @@ export async function getLoggedInUser() {
     const { account } = await createSessionClient();
     const result = await account.get();
 
-    const user = await getUserInfo({ userId: result.$id})
+    if (!result?.$id) {
+      throw new Error('No user found');
+    }
+
+    const user = await getUserInfo({ userId: result.$id });
 
     return parseStringify(user);
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return null;
   }
 }
@@ -131,7 +126,7 @@ export const logoutAccount = async () => {
   try {
     const { account } = await createSessionClient();
 
-    cookies().delete('appwrite-session');
+    (await cookies()).delete('appwrite-session');
 
     await account.deleteSession('current');
   } catch (error) {
@@ -148,7 +143,7 @@ export const createLinkToken = async (user: User) => {
       client_name: `${user.firstName} ${user.lastName}`,
       products: ['auth'] as Products[],
       language: 'en',
-      country_codes: ['US'] as CountryCode[],
+      country_codes: ['CA'] as CountryCode[],
     }
 
     const response = await plaidClient.linkTokenCreate(tokenParams);
